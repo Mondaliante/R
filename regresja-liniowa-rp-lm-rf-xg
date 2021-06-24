@@ -1,3 +1,6 @@
+#nie gwarantuje, że to jest dobrze xD robione troche na czuja z dodaniem xgboosta, jakby jutro nim zaskoczył. Strojenie może zająć trochę czasu więc
+# jak coś olać. Trzeba rozjebać R, a nie się rozjebać
+
 #instalujemy pakiety
 library(MASS)
 library(dplyr)

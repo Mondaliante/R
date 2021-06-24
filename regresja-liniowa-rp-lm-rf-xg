@@ -122,7 +122,7 @@ instance.xg <- TuningInstanceSingleCrit$new(
   task = task2,
   learner = lrn("regr.xgboost", objective = "reg:squarederror", nthread = 1),
   resampling = rsmp("cv", folds = 10),
-  measure = msr("regr.mae"),
+  measure = msr("regr.mae"), #tu można zmienic na inne gówna
   search_space = pars.xg,
   terminator = trm("evals", n_evals = 30)
 )
@@ -141,3 +141,40 @@ instance.xg$result
 #                               eta       nrounds      gamma subsample learner_param_vals  x_domain regr.mse 
 #INFO  [22:08:12.372] [bbotk]  0.0849329     290 0.02604911 0.8820071          <list[7]> <list[4]> 1.008123
 
+
+#chyba to ma być tak tylko na innych predyktorach
+# 1 #### 
+# Zbuduj model liniowy, w którym zmienna celu to x1 a predyktory to zmienne # x3 - x7 i x19. Za pomocą tego modelu dokonaj predykcji na danych treningowych # 
+
+# 2 #### # Porównaj za pomocą kroswalidacji wcześniejszy model liniowy z modelem random # forest na podstawie błędu MAPE. Predyktorami w tym drugim modelu też mają być
+dt5 <- read.csv2("http://dydaktyka.polsl.pl/roz6/towczarek/data017.csv", stringsAsFactors = TRUE)
+
+str(dt5)
+summary(dt5)
+pp <- dt5[,-c(2,8:18)]
+
+set.seed(10)
+
+lrn.lm <- lrn("regr.lm")
+task1 <- TaskRegr$new(id = "pp", backend = pp, target = "x1")
+lrn.lm$train(task1)
+pred.lm <- lrn.lm$predict(task1)
+pred.lm$score(msr("regr.mape"))
+lrn.lm$model
+
+set.seed(10)
+lrn.rf <- lrn("regr.ranger")
+lrn.rf$train(task1)
+pred.rf <- lrn.rf$predict(task1)
+pred.rf$score(msr("regr.mape"))
+
+
+design1 <- benchmark_grid(
+  tasks = task1,
+  learners = list(lrn.rf, lrn.lm),
+  resamplings = rsmp("cv")
+)
+
+bmr1 <- benchmark(design1)
+
+bmr1$aggregate(msrs(list("regr.mape")))
